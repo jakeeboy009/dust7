@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<!-- 한국어 웹 문서 선언 -->
+<html lang="ko">
+<head>
+    <!-- 문자 인코딩 설정 (UTF-8) -->
+    <meta charset="UTF-8">
+    <!-- 모바일 환경을 위한 반응형 뷰포트 설정 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 웹 애플리케이션 제목 -->
+    <title>실시간 공기 신호등 - 미세먼지 모니터링</title>
+    <!-- 고품질 한글 웹폰트 Pretendard 연결 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.variable.min.css" />
+    <!-- 데이터 시각화를 위한 Chart.js 라이브러리 CDN 연결 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 외부 스타일시트(CSS) 파일 연결 -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 전체 페이지 레이아웃 컨테이너 -->
+    <div class="container">
+        <!-- 상단 헤더 영역 -->
+        <header class="header">
+            <!-- 서비스 메인 타이틀 -->
+            <h1>🚦 실시간 공기 신호등</h1>
+            <!-- 서브 타이틀 설명문 -->
+            <p class="subtitle">한눈에 확인하는 우리 동네 미세먼지 신호등</p>
+        </header>
+
+        <!-- 시/도 선택 드롭다운 컨트롤 영역 -->
+        <section class="control-section">
+            <!-- 지역 선택 라벨 -->
+            <label for="sidoSelect" class="select-label">지역 선택</label>
+            <!-- 17개 시·도 및 전국 선택 드롭다운 -->
+            <select id="sidoSelect" class="sido-dropdown">
+                <!-- 전국 옵션 -->
+                <option value="전국">전국</option>
+                <!-- 서울특별시 (기본 선택) -->
+                <option value="서울" selected>서울</option>
+                <!-- 부산광역시 -->
+                <option value="부산">부산</option>
+                <!-- 대구광역시 -->
+                <option value="대구">대구</option>
+                <!-- 인천광역시 -->
+                <option value="인천">인천</option>
+                <!-- 광주광역시 -->
+                <option value="광주">광주</option>
+                <!-- 대전광역시 -->
+                <option value="대전">대전</option>
+                <!-- 울산광역시 -->
+                <option value="울산">울산</option>
+                <!-- 세종특별자치시 -->
+                <option value="세종">세종</option>
+                <!-- 경기도 -->
+                <option value="경기">경기</option>
+                <!-- 강원특별자치도 -->
+                <option value="강원">강원</option>
+                <!-- 충청북도 -->
+                <option value="충북">충북</option>
+                <!-- 충청남도 -->
+                <option value="충남">충남</option>
+                <!-- 전북특별자치도 -->
+                <option value="전북">전북</option>
+                <!-- 전라남도 -->
+                <option value="전남">전남</option>
+                <!-- 경상북도 -->
+                <option value="경북">경북</option>
+                <!-- 경상남도 -->
+                <option value="경남">경남</option>
+                <!-- 제주특별자치도 -->
+                <option value="제주">제주</option>
+            </select>
+        </section>
+
+        <!-- 대형 공기 신호등 요약 섹션 -->
+        <section class="traffic-light-section">
+            <!-- 신호등 메인 카드 -->
+            <div class="traffic-card loading" id="trafficCard">
+                <!-- 선택된 지역 이름 헤더 -->
+                <div class="traffic-location" id="selectedAreaText">서울 실시간 대기질</div>
+                <!-- 커다란 신호등 이모지 (🔵🟢🟠🔴) -->
+                <div class="traffic-emoji" id="trafficEmoji">⏳</div>
+                <!-- 대표 상태 텍스트 (좋음 / 보통 / 나쁨 / 매우나쁨) -->
+                <div class="traffic-status-text" id="trafficStatusText">불러오는 중...</div>
+                <!-- 평균 수치 박스 -->
+                <div class="traffic-number-box">
+                    <span class="traffic-number" id="averagePm10Value">-</span>
+                    <!-- 수치 단위 -->
+                    <span class="traffic-unit">㎍/㎥</span>
+                </div>
+                <!-- 생활 권고 한 줄 안내 문구 (나쁨 이상 시 마스크 권고) -->
+                <div class="traffic-advice" id="trafficAdvice">대기 정보를 불러오는 중입니다...</div>
+                <!-- 측정소 개수 및 기준 안내 텍스트 -->
+                <div class="traffic-meta" id="trafficMeta">잠시만 기다려주세요</div>
+            </div>
+        </section>
+
+        <!-- 로딩 및 에러 상태 알림 메시지 영역 -->
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- 미세먼지 상위 10개 측정소 가로 막대그래프 섹션 -->
+        <section class="chart-section" id="chartSection">
+            <!-- 차트를 감싸는 카드 박스 -->
+            <div class="chart-card">
+                <!-- 차트 상단 헤더 -->
+                <div class="chart-header">
+                    <!-- 차트 메인 타이틀 -->
+                    <h2 class="chart-title">📊 미세먼지 높은 곳 TOP 10</h2>
+                    <!-- 차트 부가 단위 설명 -->
+                    <span class="chart-subtitle" id="chartSubtitle">단위: ㎍/㎥</span>
+                </div>
+                <!-- 차트 캔버스를 반응형으로 감싸는 래퍼 -->
+                <div class="chart-wrapper">
+                    <!-- Chart.js 캔버스 요소 -->
+                    <canvas id="topDustChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 측정소 목록 헤더 안내 -->
+        <div class="station-list-header">
+            <!-- 목록 소제목 -->
+            <h2 class="station-list-title">측정소별 실시간 현황</h2>
+            <!-- 측정 기준 시각 표시 -->
+            <span class="station-update-time" id="standardTimeText">-</span>
+        </div>
+
+        <!-- 각 측정소별 카드가 표시되는 그리드 컨테이너 -->
+        <main class="cards-grid" id="cardsGrid">
+            <!-- 자바스크립트로 측정소 카드가 생성됩니다 -->
+        </main>
+
+        <!-- 하단 정보 및 출처 안내 푸터 영역 -->
+        <footer class="app-footer">
+            <!-- 출처 안내 텍스트 (한국환경공단 에어코리아) -->
+            <p class="source-text">
+                데이터 출처: <strong>한국환경공단 에어코리아</strong> (공공데이터포털 실시간 대기오염정보)
+            </p>
+            <!-- 대기 정보 안내 및 유의사항 -->
+            <p class="disclaimer-text">
+                실시간 관측된 자료이므로 현지 사정이나 데이터 수신 상태에 따라 변동될 수 있습니다.
+            </p>
+        </footer>
+    </div>
+
+    <!-- 기능 동작 자바스크립트 파일 연결 -->
+    <script src="script.js"></script>
+</body>
+</html>
